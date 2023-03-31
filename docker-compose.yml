@@ -1,0 +1,51 @@
+version: '3.3'
+services:
+    wireguard:
+        image: linuxserver/wireguard
+        container_name: wireguard
+        cap_add:
+            - NET_ADMIN
+            - SYS_MODULE
+        environment:
+            - PUID=1000
+            - PGID=1000
+            - TZ=America/Toronto
+            - SERVERURL=wireguard.jacksystems.ca
+            - SERVERPORT=51820
+            - PEERS=4
+            - PEERDNS=auto
+            - INTERNAL_SUBNET=10.13.13.0
+            - ALLOWEDIPS=0.0.0.0/0
+            - PERSISTENTKEEPALIVE_PEERS=
+            - LOG_CONFS=true
+        ports:
+            - '51820:51820/udp'
+            - '81:81'
+        volumes:
+            - '/opt/wgconfig:/config'
+            - '/lib/modules:/lib/modules'
+            - '/usr/src:/usr/src'
+        sysctls:
+            - net.ipv4.conf.all.src_valid_mark=1
+        restart: unless-stopped
+    npm:
+      container_name: npm
+      image: 'jc21/nginx-proxy-manager:latest'
+      restart: unless-stopped
+      network_mode: 'service:wireguard'
+
+      # Uncomment the next line if you uncomment anything in the section
+      # environment:
+        # Uncomment this if you want to change the location of
+        # the SQLite DB file within the container
+        # DB_SQLITE_FILE: "/data/database.sqlite"
+
+        # Uncomment this if IPv6 is not enabled on your host
+        # DISABLE_IPV6: 'true'
+
+      volumes:
+        - ./data:/data
+        - ./letsencrypt:/etc/letsencrypt
+networks:
+  vpn-ws:
+      
